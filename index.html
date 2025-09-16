@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AgroPredict - Crop Yield Prediction</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #e9f5ee; margin: 0; padding: 0; }
+        header { background: #3c763d; color: #fff; padding: 20px 0; text-align: center; }
+        main { max-width: 500px; margin: 30px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #aaa; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #bdbdbd; border-radius: 4px; }
+        button { background: #3c763d; color: #fff; border: none; padding: 12px 20px; border-radius: 4px; font-size: 16px; margin-top: 18px; cursor: pointer; }
+        button:hover { background: #325c2e; }
+        .result { margin-top: 20px; padding: 15px; background: #dff0d8; border: 1px solid #c3e6cb; border-radius: 4px; }
+        .language { margin-top: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="title">AgroPredict</h1>
+        <p id="desc">Predict crop yield based on soil, weather, and historical data</p>
+        <div class="language">
+            <label for="langSelect"><b>Language:</b></label>
+            <select id="langSelect">
+                <option value="en">English</option>
+                <option value="te">తెలుగు</option>
+                <option value="ta">தமிழ்</option>
+                <option value="hi">हिन्दी</option>
+            </select>
+        </div>
+    </header>
+    <main>
+        <form id="predictionForm">
+            <label for="soil" id="soilLabel">Soil Type:</label>
+            <select id="soil" name="soil" required>
+                <option value="">Select...</option>
+                <option value="clay">Clay</option>
+                <option value="loam">Loam</option>
+                <option value="sandy">Sandy</option>
+            </select>
+
+            <label for="rainfall" id="rainLabel">Average Rainfall (mm):</label>
+            <input type="number" id="rainfall" name="rainfall" required />
+
+            <label for="temperature" id="tempLabel">Average Temperature (°C):</label>
+            <input type="number" id="temperature" name="temperature" required />
+
+            <label for="historicalYield" id="histLabel">Historical Yield (quintal/acre):</label>
+            <input type="number" id="historicalYield" name="historicalYield" required />
+
+            <button type="submit" id="predictBtn">Predict Yield</button>
+        </form>
+        <div id="result" class="result" style="display:none;"></div>
+    </main>
+    <script>
+        const translations = {
+            en: {
+                title: "AgroPredict",
+                desc: "Predict crop yield based on soil, weather, and historical data",
+                soilLabel: "Soil Type:",
+                rainLabel: "Average Rainfall (mm):",
+                tempLabel: "Average Temperature (°C):",
+                histLabel: "Historical Yield (quintal/acre):",
+                predictBtn: "Predict Yield",
+                result: "Predicted Crop Yield:"
+            },
+            te: {
+                title: "ఎగ్రోప్రీడిక్ట్",
+                desc: "మట్టి, వాతావరణం మరియు చారిత్రక డేటా ఆధారంగా పంట ఫలాన్ని అంచనా వేయండి",
+                soilLabel: "మట్టి రకం:",
+                rainLabel: "సగటు వర్షపాతం (మిమీ):",
+                tempLabel: "సగటు ఉష్ణోగ్రత (°C):",
+                histLabel: "చారిత్రక దిగుబడి (క్వింటాల్/ఏకరం):",
+                predictBtn: "అంచనా ఫలితాన్ని చూపండి",
+                result: "అంచనా పంట దిగుబడి:"
+            },
+            ta: {
+                title: "அக்ரோபிரிடிக்ட்",
+                desc: "மண், வானிலை மற்றும் வரலாற்று தரவின் அடிப்படையில் பயிர் விளைச்சலை கணிக்கவும்",
+                soilLabel: "மண் வகை:",
+                rainLabel: "சராசரி மழை (மிமீ):",
+                tempLabel: "சராசரி வெப்பநிலை (°C):",
+                histLabel: "வரலாற்று விளைச்சல் (க்விண்டல்/ஏக்கர்):",
+                predictBtn: "விளைச்சலை கணிக்கவும்",
+                result: "முன்னணிக் பயிர் விளைச்சல்:"
+            },
+            hi: {
+                title: "एग्रोप्रीडिक्ट",
+                desc: "मिट्टी, मौसम और ऐतिहासिक डेटा के आधार पर फसल उपज का पूर्वानुमान लगाएं",
+                soilLabel: "मिट्टी का प्रकार:",
+                rainLabel: "औसत वर्षा (मिमी):",
+                tempLabel: "औसत तापमान (°C):",
+                histLabel: "ऐतिहासिक उपज (क्विंटल/एकड़):",
+                predictBtn: "उपज पूर्वानुमान",
+                result: "अनुमानित फसल उपज:"
+            }
+        };
+
+        function setLanguage(lang) {
+            document.getElementById('title').innerText = translations[lang].title;
+            document.getElementById('desc').innerText = translations[lang].desc;
+            document.getElementById('soilLabel').innerText = translations[lang].soilLabel;
+            document.getElementById('rainLabel').innerText = translations[lang].rainLabel;
+            document.getElementById('tempLabel').innerText = translations[lang].tempLabel;
+            document.getElementById('histLabel').innerText = translations[lang].histLabel;
+            document.getElementById('predictBtn').innerText = translations[lang].predictBtn;
+        }
+
+        document.getElementById('langSelect').addEventListener('change', function() {
+            setLanguage(this.value);
+        });
+
+        setLanguage('en'); // Default language
+
+        document.getElementById('predictionForm').onsubmit = function(event) {
+            event.preventDefault();
+            var lang = document.getElementById('langSelect').value;
+            var soil = document.getElementById('soil').value;
+            var rainfall = parseFloat(document.getElementById('rainfall').value);
+            var temperature = parseFloat(document.getElementById('temperature').value);
+            var historicalYield = parseFloat(document.getElementById('historicalYield').value);
+
+            var predictedYield = historicalYield;
+            if (rainfall >= 800 && rainfall <= 1200) predictedYield += 5;
+            if (temperature >= 24 && temperature <= 30) predictedYield += 3;
+            if (soil === 'loam') predictedYield += 4;
+
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerHTML =
+                '<strong>' + translations[lang].result + '</strong> ' + predictedYield.toFixed(2);
+        };
+    </script>
+</body>
+</html>
